@@ -4,13 +4,12 @@ import glob, os, sys
 path = "unlabeled/images/"
 dirs = os.listdir(path)
 
-def resize():
+def crop_images():
     for item in dirs:
         print path + item
-        if os.path.isfile(path+item):
+        if ".jpg" in item and os.path.isfile(path+item):
             im = Image.open(path + item)
-            f, e = os.path.splitext(path + item)
-            imResize = im.resize((32,32), Image.ANTIALIAS)
+            imResize = im.crop((0,0, 200, 83))
             imResize.save(path + item)
 
 def rename():
@@ -24,7 +23,7 @@ def get_smallest_size():
 	width = 500
 	height = 500
 	for item in dirs:
-		if os.path.isfile(path+item):
+		if ".jpg" in item and os.path.isfile(path+item):
 			im = Image.open(path + item)
 			w, h = im.size
 			if w < width:
@@ -34,4 +33,4 @@ def get_smallest_size():
 	print "w: %d, h: %d" % (width, height)
 
 if __name__ == "__main__":
-    get_smallest_size()
+    crop_images()
