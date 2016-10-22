@@ -1,8 +1,9 @@
 Mood definitions
-1) adventurous (happy/positive/energetic)
+1) adventurous (excited/positive/energetic)
 2) aggressive (stressful/energetic)
 3) calm/relaxing (serene/positive/slower tempo)
 4) sad (negative/slow tempo/melancholic)
 5) anxious (negative/stressful/fearful)
+6) whimsical (happy/plaful/magical)
 
 Anything that's ambiguous goes into unlabeled.
