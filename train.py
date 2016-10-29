@@ -21,13 +21,11 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from im2txt import configuration
-from im2txt import show_and_tell_model
+import configuration
+import show_and_tell_model
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.flags.DEFINE_string("input_file_pattern", "",
-                       "File pattern of sharded TFRecord input files.")
 tf.flags.DEFINE_string("inception_checkpoint_file", "",
                        "Path to a pretrained inception_v3 model.")
 tf.flags.DEFINE_string("train_dir", "",
@@ -42,11 +40,9 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def main(unused_argv):
-  assert FLAGS.input_file_pattern, "--input_file_pattern is required"
   assert FLAGS.train_dir, "--train_dir is required"
 
   model_config = configuration.ModelConfig()
-  model_config.input_file_pattern = FLAGS.input_file_pattern
   model_config.inception_checkpoint_file = FLAGS.inception_checkpoint_file
   training_config = configuration.TrainingConfig()
 

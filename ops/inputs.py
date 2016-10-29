@@ -123,7 +123,7 @@ def prefetch_input_data(reader,
   return values_queue
 
 
-def batch_with_dynamic_pad(images_and_captions,
+def batch_with_dynamic_pad(images_and_music,
                            batch_size,
                            queue_capacity,
                            add_summaries=True):
@@ -179,12 +179,12 @@ def batch_with_dynamic_pad(images_and_captions,
     mask: An int32 0/1 Tensor of shape [batch_size, padded_length].
   """
   enqueue_list = []
-  for image, caption in images_and_captions:
-    caption_length = tf.shape(caption)[0]
-    input_length = tf.expand_dims(tf.sub(caption_length, 1), 0)
+  for image, music in images_and_music:
+    music_length = tf.shape(music)[0]
+    input_length = tf.expand_dims(tf.sub(music_length, 1), 0)
 
-    input_seq = tf.slice(caption, [0], input_length)
-    target_seq = tf.slice(caption, [1], input_length)
+    input_seq = tf.slice(music, [0], input_length)
+    target_seq = tf.slice(music, [1], input_length)
     indicator = tf.ones(input_length, dtype=tf.int32)
     enqueue_list.append([image, input_seq, target_seq, indicator])
 

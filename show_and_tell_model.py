@@ -25,11 +25,10 @@ from __future__ import print_function
 
 
 import tensorflow as tf
-
-from im2txt.ops import image_embedding
-from im2txt.ops import image_processing
-from im2txt.ops import inputs as input_ops
-
+from data import preprocess_img_music
+from ops import image_embedding
+from ops import image_processing
+from ops import inputs as input_ops
 
 class ShowAndTellModel(object):
   """Image-to-text implementation based on http://arxiv.org/abs/1411.4555.
@@ -143,8 +142,19 @@ class ShowAndTellModel(object):
       input_mask = None
     else:
       # CALL get_image_music_pairs from preprocess_img_music.py and run more processing
+      images_and_music = preprocess_img_music.get_image_music_pairs()
+      print("Finished fetching image&music pairs")
+      for pair in images_and_music:
+        pair[0] = self.process_image(pair[0], thread_id=thread_id)
       
-      
+      # Batch inputs
+      queue_capacity = (2 * self.config.num_preprocess_threads *
+                        self.config.batch_size)
+      images, input_seqs, target_seqs, input_mask = (
+          input_ops.batch_with_dynamic_pad(images_and_music,
+                                           batch_size=self.config.batch_size,
+                                           queue_capacity=queue_capacity))
+         
     self.images = images
     self.input_seqs = input_seqs
     self.target_seqs = target_seqs
