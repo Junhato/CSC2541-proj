@@ -142,37 +142,9 @@ class ShowAndTellModel(object):
       target_seqs = None
       input_mask = None
     else:
-      # Prefetch serialized SequenceExample protos.
-      input_queue = input_ops.prefetch_input_data(
-          self.reader,
-          self.config.input_file_pattern,
-          is_training=self.is_training(),
-          batch_size=self.config.batch_size,
-          values_per_shard=self.config.values_per_input_shard,
-          input_queue_capacity_factor=self.config.input_queue_capacity_factor,
-          num_reader_threads=self.config.num_input_reader_threads)
-
-      # Image processing and random distortion. Split across multiple threads
-      # with each thread applying a slightly different distortion.
-      assert self.config.num_preprocess_threads % 2 == 0
-      images_and_captions = []
-      for thread_id in range(self.config.num_preprocess_threads):
-        serialized_sequence_example = input_queue.dequeue()
-        encoded_image, caption = input_ops.parse_sequence_example(
-            serialized_sequence_example,
-            image_feature=self.config.image_feature_name,
-            caption_feature=self.config.caption_feature_name)
-        image = self.process_image(encoded_image, thread_id=thread_id)
-        images_and_captions.append([image, caption])
-
-      # Batch inputs.
-      queue_capacity = (2 * self.config.num_preprocess_threads *
-                        self.config.batch_size)
-      images, input_seqs, target_seqs, input_mask = (
-          input_ops.batch_with_dynamic_pad(images_and_captions,
-                                           batch_size=self.config.batch_size,
-                                           queue_capacity=queue_capacity))
-
+      # CALL get_image_music_pairs from preprocess_img_music.py and run more processing
+      
+      
     self.images = images
     self.input_seqs = input_seqs
     self.target_seqs = target_seqs
