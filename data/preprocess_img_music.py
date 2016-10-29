@@ -6,7 +6,7 @@ from collections import Counter
 from collections import namedtuple
 from datetime import datetime
 from os import listdir
-from midi_manipulation import *
+from data.midi_manipulation import *
 import json
 import math
 import os.path
@@ -66,7 +66,7 @@ def _get_image_music_pair(image, decoder, chunk):
   return [image,chunk]
   
 def get_image_music_pairs():
-  mood_dirs = ['sad', 'anxious', 'happy'] 
+  mood_dirs = ['data/sad', 'data/anxious', 'data/happy'] 
   decoder = ImageDecoder()
   images_and_music = []
     
