@@ -19,4 +19,5 @@ def midi_chunks_matrix(filename):
  
 if __name__ == "__main__":
     fname = "../data/unlabeled/music/08heatman.mid"
-    print midi_chunks_matrix(fname)
+    print midi_chunks_matrix(fname)[0][0]
+
