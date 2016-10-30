@@ -1,13 +1,10 @@
-import midi
-import numpy as np
-
+import midi, numpy
 
 lowerBound = 24
 upperBound = 102
-span = upperBound-lowerBound
 
+def midiToNoteStateMatrix(midifile):
 
-def midiToNoteStateMatrix(midifile, squash=True, span=span):
     pattern = midi.read_midifile(midifile)
 
     timeleft = [track[0].tick for track in pattern]
@@ -15,20 +12,19 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span):
     posns = [0 for track in pattern]
 
     statematrix = []
+    span = upperBound-lowerBound
     time = 0
 
     state = [[0,0] for x in range(span)]
     statematrix.append(state)
-    condition = True
-    while condition:
+    while True:
         if time % (pattern.resolution / 4) == (pattern.resolution / 8):
             # Crossed a note boundary. Create a new state, defaulting to holding notes
             oldstate = state
             state = [[oldstate[x][0],0] for x in range(span)]
             statematrix.append(state)
-        for i in range(len(timeleft)): #For each track
-            if not condition:
-                break
+
+        for i in range(len(timeleft)):
             while timeleft[i] == 0:
                 track = pattern[i]
                 pos = posns[i]
@@ -47,9 +43,8 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span):
                     if evt.numerator not in (2, 4):
                         # We don't want to worry about non-4 time signatures. Bail early!
                         # print "Found time signature event {}. Bailing!".format(evt)
-                        out =  statematrix
-                        condition = False
-                        break
+                        return statematrix
+
                 try:
                     timeleft[i] = track[pos + 1].tick
                     posns[i] += 1
@@ -64,16 +59,10 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span):
 
         time += 1
 
-    S = np.array(statematrix)
-    statematrix = np.hstack((S[:, :, 0], S[:, :, 1]))
-    statematrix = np.asarray(statematrix).tolist()
     return statematrix
 
-def noteStateMatrixToMidi(statematrix, name="example", span=span):
-    statematrix = np.array(statematrix)
-    if not len(statematrix.shape) == 3:
-        statematrix = np.dstack((statematrix[:, :span], statematrix[:, span:]))
-    statematrix = np.asarray(statematrix)
+def noteStateMatrixToMidi(statematrix, name="example"):
+    statematrix = numpy.asarray(statematrix)
     pattern = midi.Pattern()
     track = midi.Track()
     pattern.append(track)
