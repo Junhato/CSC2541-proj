@@ -60,7 +60,7 @@ def VGG_16(weights_path=None):
 
 def get_image_features(img_path, dr_layer_size):
 
-    # image preprocesing
+    # image pre-procesing
     im = cv2.resize(cv2.imread(img_path), (224, 224)).astype(np.float32)
     im[:,:,0] -= 103.939
     im[:,:,1] -= 116.779
@@ -68,7 +68,7 @@ def get_image_features(img_path, dr_layer_size):
     im = im.transpose((2,0,1))
     im = np.expand_dims(im, axis=0)
 
-    # Test pretrained model
+    # Test pre-trained model
     model = VGG_16('vgg16_weights_th_dim_ordering_th_kernels.h5')
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(optimizer=sgd, loss='categorical_crossentropy')
