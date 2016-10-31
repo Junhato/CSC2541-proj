@@ -163,7 +163,8 @@ class Model(object):
         else:
             time_masks = []
 
-        time_outputs_info = [initial_state_with_taps(layer, num_time_parallel) for layer in self.time_model.layers]
+        first_layer_initial_state = [dict(initial=self.get_image_features(), taps=[-1])]
+        time_outputs_info = first_layer_initial_state + [initial_state_with_taps(layer, num_time_parallel) for layer in self.time_model.layers[1:]]
         time_result, _ = theano.scan(fn=step_time, sequences=[time_inputs], non_sequences=time_masks, outputs_info=time_outputs_info)
         
         self.time_thoughts = time_result
