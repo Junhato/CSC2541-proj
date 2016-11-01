@@ -128,6 +128,8 @@ class Model(object):
         self.input_mat = T.btensor4()
         # dimensions: (batch, time, notes, onOrArtic) with 0:on, 1:artic
         self.output_mat = T.btensor4()
+        # dimensions: (batch, features)
+        self.img_vec = T.dvector()
         
         self.epsilon = np.spacing(np.float32(1.0))
 
@@ -155,7 +157,7 @@ class Model(object):
         
         # time_inputs is a matrix (time, batch/note, input_per_note)
         time_inputs = input_slice.transpose((1,0,2,3)).reshape((n_time,n_batch*n_note,n_ipn))
-        num_time_parallel = time_inputs.shape[1]
+        num_time_parallel = time_inputs.shape[1] #780
         
         # apply dropout
         if self.dropout > 0:
@@ -163,7 +165,7 @@ class Model(object):
         else:
             time_masks = []
 
-        first_layer_initial_state = [dict(initial=self.get_image_features(), taps=[-1])]
+        first_layer_initial_state = [dict(initial=matrixify(self.img_vec, num_time_parallel), taps=[-1])]
         time_outputs_info = first_layer_initial_state + [initial_state_with_taps(layer, num_time_parallel) for layer in self.time_model.layers[1:]]
         time_result, _ = theano.scan(fn=step_time, sequences=[time_inputs], non_sequences=time_masks, outputs_info=time_outputs_info)
         
@@ -222,13 +224,13 @@ class Model(object):
         
         updates, _, _, _, _ = create_optimization_updates(self.cost, self.params, method="adadelta")
         self.update_fun = theano.function(
-            inputs=[self.input_mat, self.output_mat],
+            inputs=[self.input_mat, self.output_mat, self.img_vec],
             outputs=self.cost,
             updates=updates,
             allow_input_downcast=True)
 
         self.update_thought_fun = theano.function(
-            inputs=[self.input_mat, self.output_mat],
+            inputs=[self.input_mat, self.output_mat, self.img_vec],
             outputs= ensure_list(self.time_thoughts) + ensure_list(self.note_thoughts) + [self.cost],
             allow_input_downcast=True)
     
@@ -264,6 +266,7 @@ class Model(object):
 
         self.predict_seed = T.bmatrix()
         self.steps_to_simulate = T.iscalar()
+        self.img_vec = T.dvector()
 
         def step_time(*states):
             # States is [ *hiddens, prev_result, time]
@@ -306,10 +309,9 @@ class Model(object):
         # start_sentinel = startSentinel()
         num_notes = self.predict_seed.shape[0]
         
-        time_outputs_info = ([ initial_state_with_taps(layer, num_notes) for layer in self.time_model.layers ] +
-                             [ dict(initial=self.predict_seed, taps=[-1]),
-                               dict(initial=0, taps=[-1]),
-                               None ])
+        first_layer_initial_state = [dict(initial=matrixify(self.img_vec, num_notes), taps=[-1])]
+        time_outputs_info = (first_layer_initial_state + [ initial_state_with_taps(layer, num_notes) for layer in self.time_model.layers[1:] ] +
+                             [ dict(initial=self.predict_seed, taps=[-1]), dict(initial=0, taps=[-1]), None ])
             
         time_result, updates = theano.scan( fn=step_time, 
                                             outputs_info=time_outputs_info, 
@@ -320,13 +322,13 @@ class Model(object):
         self.predicted_output = time_result[-1]
         
         self.predict_fun = theano.function(
-            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed],
+            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec],
             outputs=self.predicted_output,
             updates=updates,
             allow_input_downcast=True)
 
         self.predict_thought_fun = theano.function(
-            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed],
+            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec],
             outputs=ensure_list(self.predict_thoughts),
             updates=updates,
             allow_input_downcast=True)
