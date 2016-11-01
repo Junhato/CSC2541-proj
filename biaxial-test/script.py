@@ -46,7 +46,9 @@ if __name__ == "__main__":
     for mood in mood_dirs:
         img_dir = os.listdir(path + mood + "/images")
         for image in img_dir:
-            img_dict[path + mood + "/images/" + image] = mood
+            img_path = path + mood + "/images/" + image
+            if os.path.isfile(img_path)
+                img_dict[img_path] = mood
     print("All images loaded in dictionary.")        
     
     # Train
