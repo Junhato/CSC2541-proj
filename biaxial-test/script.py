@@ -19,7 +19,7 @@ if __name__ == "__main__":
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
     dropout = 0.5
-    epochs = 10
+    epochs = 5
 
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
     cnn = VGG_16('vgg16_weights_th_dim_ordering_th_kernels.h5')
