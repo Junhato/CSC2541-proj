@@ -19,7 +19,7 @@ if __name__ == "__main__":
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
     dropout = 0.5
-    epochs = 5000
+    epochs = 10
 
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
     cnn = VGG_16('vgg16_weights_th_dim_ordering_th_kernels.h5')
@@ -53,29 +53,29 @@ if __name__ == "__main__":
     
     # Train
     old_handler = signal.signal(signal.SIGINT, signal_handler)
+    counter = 0;
     for i in range(epochs):
         for img,mood in img_dict.iteritems():
-            print(img)
             img_feature = get_image_features(cnn, img, dr_layer_size)
             pcs_in, pcs_out = getPieceBatch(music_dict[mood])
             error = m.update_fun(pcs_in, pcs_out, img_feature[0])
-        if i % 100 == 0:
-            print "epoch {}, error={}".format(i,error)
-        if i % 500 == 0 or (i % 100 == 0 and i < 1000):
-            # sad
-            xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["sad"]))
-            noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], sad_img)), axis=0),'output/sample{}'.format(i))
-            pickle.dump(m.learned_config,open('output/params{}-sad.p'.format(i), 'wb'))
+            if counter % 100 == 0:
+                print "counter {}, error={}".format(i,error)
+                # sad
+                xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["sad"]))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], sad_img)), axis=0),'output/sample-sad{}'.format(i))
+                
+                # happy
+                xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["happy"]))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], happy_img)), axis=0),'output/sample-happy{}'.format(i))
+                
+                #anxious
+                xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["anxious"]))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], anxious_img)), axis=0),'output/sample-anxious{}'.format(i))
+                
+                pickle.dump(m.learned_config,open('output/params{}.p'.format(i), 'wb'))
             
-            # happy
-            xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["happy"]))
-            noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], happy_img)), axis=0),'output/sample{}'.format(i))
-            pickle.dump(m.learned_config,open('output/params{}-happy.p'.format(i), 'wb'))
-            
-            #anxious
-            xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["anxious"]))
-            noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], anxious_img)), axis=0),'output/sample{}'.format(i))
-            pickle.dump(m.learned_config,open('output/params{}-anxious.p'.format(i), 'wb'))
+            counter += 1
             
     signal.signal(signal.SIGINT, old_handler)       
 
