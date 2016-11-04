@@ -60,20 +60,20 @@ if __name__ == "__main__":
             pcs_in, pcs_out = getPieceBatch(music_dict[mood])
             error = m.update_fun(pcs_in, pcs_out, img_feature[0])
             if counter % 100 == 0:
-                print "counter {}, error={}".format(i,error)
+                print "counter {}, error={}".format(counter,error)
                 # sad
                 xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["sad"]))
-                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], sad_img)), axis=0),'output/sample-sad{}'.format(i))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], sad_img)), axis=0),'output/sample-sad{}'.format(counter))
                 
                 # happy
                 xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["happy"]))
-                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], happy_img)), axis=0),'output/sample-happy{}'.format(i))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], happy_img)), axis=0),'output/sample-happy{}'.format(counter))
                 
                 #anxious
                 xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["anxious"]))
-                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], anxious_img)), axis=0),'output/sample-anxious{}'.format(i))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], anxious_img)), axis=0),'output/sample-anxious{}'.format(counter))
                 
-                pickle.dump(m.learned_config,open('output/params{}.p'.format(i), 'wb'))
+                pickle.dump(m.learned_config,open('output/params{}.p'.format(counter), 'wb'))
             
             counter += 1
             
