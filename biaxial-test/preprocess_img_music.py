@@ -6,7 +6,7 @@ from collections import Counter
 from collections import namedtuple
 from datetime import datetime
 from os import listdir
-from data.midi_manipulation import *
+from midi_to_statematrix import *
 import json
 import math
 import os.path
