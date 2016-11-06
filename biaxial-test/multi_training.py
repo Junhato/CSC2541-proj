@@ -41,7 +41,7 @@ def getPieceSegment(pieces):
 def getPieceBatch(pieces):
     #i,o = zip(*[getPieceSegment(pieces) for _ in range(batch_width)])
     i, o = getPieceSegment(pieces)
-    return numpy.array(i), numpy.array(o)
+    return numpy.array([i]), numpy.array([o])
 
 def trainPiece(model,pieces,epochs,start=0):
     stopflag = [False]

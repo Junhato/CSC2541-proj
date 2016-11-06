@@ -33,7 +33,6 @@ if __name__ == "__main__":
     happy_pieces = loadPieces(path + mood_dirs[1] + '/music/')
     anxious_pieces = loadPieces(path + mood_dirs[2] + '/music/')
     print("Music loaded.")
-    img_dict = {}
     music_dict = {"sad": sad_pieces, "happy": happy_pieces, "anxious": anxious_pieces}
     
     # 'sample' images
@@ -43,19 +42,15 @@ if __name__ == "__main__":
     print("Sample image features retrieved.")
     
     # Add all images and their corresponding mood in a dictionary
+    img_music_dict = {}
     for mood in mood_dirs:
         img_dir = os.listdir(path + mood + "/images")
         for image in img_dir:
             img_path = path + mood + "/images/" + image
             if os.path.isfile(img_path):
-                img_dict[img_path] = mood
-    print("All images loaded in dictionary.")
-
-    # Create a dictionary for image and music clip
-    img_music_dict = {}
-    for img, mood in img_dict.iteritems():
-        pcs_in, pcs_out = getPieceBatch(music_dict[mood])
-        img_music_dict[img] = [pcs_in, pcs_out]
+                pcs_in, pcs_out = getPieceBatch(music_dict[mood])
+                img_music_dict[img] = [pcs_in, pcs_out]
+    print("All image-music loaded in dictionary.")
     
     # Train
     old_handler = signal.signal(signal.SIGINT, signal_handler)
