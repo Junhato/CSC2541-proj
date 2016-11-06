@@ -49,7 +49,7 @@ if __name__ == "__main__":
             img_path = path + mood + "/images/" + image
             if os.path.isfile(img_path):
                 pcs_in, pcs_out = getPieceBatch(music_dict[mood])
-                img_music_dict[img] = [pcs_in, pcs_out]
+                img_music_dict[img_path] = [pcs_in, pcs_out]
     print("All image-music loaded in dictionary.")
     
     # Train
