@@ -49,16 +49,22 @@ if __name__ == "__main__":
             img_path = path + mood + "/images/" + image
             if os.path.isfile(img_path):
                 img_dict[img_path] = mood
-    print("All images loaded in dictionary.")        
+    print("All images loaded in dictionary.")
+
+    # Create a dictionary for image and music clip
+    img_music_dict = {}
+    for img, mood in img_dict.iteritems():
+        pcs_in, pcs_out = getPieceBatch(music_dict[mood])
+        img_music_dict[img] = [pcs_in, pcs_out]
     
     # Train
     old_handler = signal.signal(signal.SIGINT, signal_handler)
     counter = 0;
+
     for i in range(epochs):
-        for img,mood in img_dict.iteritems():
+        for img, music in img_music_dict.iteritems():
             img_feature = get_image_features(cnn, img, dr_layer_size)
-            pcs_in, pcs_out = getPieceBatch(music_dict[mood])
-            error = m.update_fun(pcs_in, pcs_out, img_feature[0])
+            error = m.update_fun(music[0], music[1], img_feature[0])
             if counter % 100 == 0:
                 print "counter {}, error={}".format(counter,error)
                 # sad
