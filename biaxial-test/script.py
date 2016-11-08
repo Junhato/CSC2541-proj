@@ -54,7 +54,7 @@ if __name__ == "__main__":
     
     # Load previously saved configurations
     learned_list = pickle.load(open('output/params7300.p', 'rb'))
-    m.learned_config(learned_list)
+    m.learned_config = learned_list
     
     # Train
     old_handler = signal.signal(signal.SIGINT, signal_handler)
