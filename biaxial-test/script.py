@@ -52,9 +52,13 @@ if __name__ == "__main__":
                 img_music_dict[img_path] = [pcs_in, pcs_out]
     print("All image-music loaded in dictionary.")
     
+    # Load previously saved configurations
+    learned_list = pickle.load(open('output/params7300.p', 'rb'))
+    m.learned_config(learned_list)
+    
     # Train
     old_handler = signal.signal(signal.SIGINT, signal_handler)
-    counter = 0;
+    counter = 7300;
 
     for i in range(epochs):
         for img, music in img_music_dict.iteritems():
