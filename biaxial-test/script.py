@@ -18,7 +18,7 @@ if __name__ == "__main__":
     dr_layer_size = 600
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
-    dropout = 0.5
+    dropout = 0.35
     epochs = 5
 
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
