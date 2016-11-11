@@ -39,7 +39,7 @@ class VRAE:
         W_hhd = theano.shared(np.random.normal(0,sigma_init,(hidden_units_decoder,hidden_units_decoder)).astype(theano.config.floatX), name='W_hhd')
         W_xhd = theano.shared(np.random.normal(0,sigma_init,(hidden_units_decoder,features)).astype(theano.config.floatX), name='W_hxd')
         
-        b_hd = theano.shared(np.zeros((hidden_units_decoder,1)).astype(theano.config.floatX), name='b_hxd', broadcastable=(False,True))
+        b_hd = theano.shared(np.zeros((hidden_units_decoder,1)).astype(theano.config.floatX), name='b_hd', broadcastable=(False,True))
         
         W_hx = theano.shared(np.random.normal(0,sigma_init,(features,hidden_units_decoder)).astype(theano.config.floatX), name='W_hx')
         b_hx = theano.shared(np.zeros((features,1)).astype(theano.config.floatX), name='b_hx', broadcastable=(False,True))
@@ -179,10 +179,9 @@ class VRAE:
         b_zh = self.params['b_zh'].get_value()
 
         W_hhd = self.params['W_hhd'].get_value()
-        b_hhd = self.params['b_hhd'].get_value()
 
         W_xhd = self.params['W_xhd'].get_value()
-        b_xhd = self.params['b_xhd'].get_value()
+        b_hd = self.params['b_hd'].get_value()
 
         W_hx = self.params['W_hx'].get_value()
         b_hx = self.params['b_hx'].get_value()
@@ -190,7 +189,7 @@ class VRAE:
         h = W_zh.dot(z) + b_zh
 
         for t in xrange(t_steps):
-            h = np.tanh(W_hhd.dot(h) + b_hhd + W_xhd.dot(x[t,:,np.newaxis]) + b_xhd)
+            h = np.tanh(W_hhd.dot(h) + W_xhd.dot(x[t,:,np.newaxis]) + b_hd)
             x[t+1,:] = np.squeeze(1 /(1 + np.exp(-(W_hx.dot(h) + b_hx))))
         
         return x[1:,:]
