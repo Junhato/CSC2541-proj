@@ -296,7 +296,7 @@ class Model(object):
             # exist yet. So instead of iterating over the combination, we iterate over only the activations,
             # and then combine in the previous outputs in the step. And then since we are passing outputs to
             # previous inputs, we need an additional outputs_info for the initial "previous" output of zero.
-            first_layer_initial_state_pitch = [dict(initial=matrixify(self.img_vec_pitch, num_notes), taps=[-1])]
+            first_layer_initial_state_pitch = [dict(initial=self.img_vec_pitch, taps=[-1])]
             note_outputs_info = (first_layer_initial_state_pitch + [ initial_state_with_taps(layer) for layer in self.pitch_model.layers[1:] ] +
                                  [ dict(initial=start_note_values, taps=[-1]) ])
             
@@ -326,13 +326,13 @@ class Model(object):
         self.predicted_output = time_result[-1]
         
         self.predict_fun = theano.function(
-            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec_time],
+            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec_time, self.img_vec_pitch],
             outputs=self.predicted_output,
             updates=updates,
             allow_input_downcast=True)
 
         self.predict_thought_fun = theano.function(
-            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec_time],
+            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec_time, self.img_vec_pitch],
             outputs=ensure_list(self.predict_thoughts),
             updates=updates,
             allow_input_downcast=True)

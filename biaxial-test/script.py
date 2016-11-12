@@ -16,7 +16,7 @@ if __name__ == "__main__":
     path = "../data/"
     mood_dirs = ["sad", "happy", "anxious"]
     dr_layer_size = 600
-    dr_layer_size2 = 150
+    dr_layer_size2 = 200
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
     dropout = 0.35
@@ -57,12 +57,12 @@ if __name__ == "__main__":
     print("All image-music loaded in dictionary.")
     
     # Load previously saved configurations
-    learned_list = pickle.load(open('output/params7300.p', 'rb'))
-    m.learned_config = learned_list
+    # learned_list = pickle.load(open('output/params7300.p', 'rb'))
+    # m.learned_config = learned_list
     
     # Train
     old_handler = signal.signal(signal.SIGINT, signal_handler)
-    counter = 7300;
+    counter = 0;
 
     for i in range(epochs):
         for img, music in img_music_dict.iteritems():
