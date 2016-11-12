@@ -129,7 +129,8 @@ class Model(object):
         # dimensions: (batch, time, notes, onOrArtic) with 0:on, 1:artic
         self.output_mat = T.btensor4()
         # dimensions: (batch, features)
-        self.img_vec = T.fvector()
+        self.img_vec_time = T.fvector()
+        self.img_vec_pitch = T.fvector()
         
         self.epsilon = np.spacing(np.float32(1.0))
 
@@ -165,8 +166,8 @@ class Model(object):
         else:
             time_masks = []
 
-        first_layer_initial_state = [dict(initial=matrixify(self.img_vec, num_time_parallel), taps=[-1])]
-        time_outputs_info = first_layer_initial_state + [initial_state_with_taps(layer, num_time_parallel) for layer in self.time_model.layers[1:]]
+        first_layer_initial_state_time = [dict(initial=matrixify(self.img_vec_time, num_time_parallel), taps=[-1])]
+        time_outputs_info = first_layer_initial_state_time + [initial_state_with_taps(layer, num_time_parallel) for layer in self.time_model.layers[1:]]
         time_result, _ = theano.scan(fn=step_time, sequences=[time_inputs], non_sequences=time_masks, outputs_info=time_outputs_info)
         
         self.time_thoughts = time_result
@@ -196,7 +197,8 @@ class Model(object):
         else:
             pitch_masks = []
 
-        note_outputs_info = [initial_state_with_taps(layer, num_timebatch) for layer in self.pitch_model.layers]
+        first_layer_initial_state_pitch = [dict(initial=matrixify(self.img_vec_pitch, num_timebatch), taps=[-1])]
+        note_outputs_info = first_layer_initial_state_pitch + [initial_state_with_taps(layer, num_timebatch) for layer in self.pitch_model.layers[1:]]
         note_result, _ = theano.scan(fn=step_note, sequences=[note_inputs], non_sequences=pitch_masks, outputs_info=note_outputs_info)
         
         self.note_thoughts = note_result
@@ -224,13 +226,13 @@ class Model(object):
         
         updates, _, _, _, _ = create_optimization_updates(self.cost, self.params, method="adadelta")
         self.update_fun = theano.function(
-            inputs=[self.input_mat, self.output_mat, self.img_vec],
+            inputs=[self.input_mat, self.output_mat, self.img_vec_time, self.img_vec_pitch],
             outputs=self.cost,
             updates=updates,
             allow_input_downcast=True)
 
         self.update_thought_fun = theano.function(
-            inputs=[self.input_mat, self.output_mat, self.img_vec],
+            inputs=[self.input_mat, self.output_mat, self.img_vec_time, self.img_vec_pitch],
             outputs= ensure_list(self.time_thoughts) + ensure_list(self.note_thoughts) + [self.cost],
             allow_input_downcast=True)
     
@@ -266,7 +268,8 @@ class Model(object):
 
         self.predict_seed = T.bmatrix()
         self.steps_to_simulate = T.iscalar()
-        self.img_vec = T.fvector()
+        self.img_vec_time = T.fvector()
+        self.img_vec_pitch = T.fvector()
 
         def step_time(*states):
             # States is [ *hiddens, prev_result, time]
@@ -293,7 +296,8 @@ class Model(object):
             # exist yet. So instead of iterating over the combination, we iterate over only the activations,
             # and then combine in the previous outputs in the step. And then since we are passing outputs to
             # previous inputs, we need an additional outputs_info for the initial "previous" output of zero.
-            note_outputs_info = ([ initial_state_with_taps(layer) for layer in self.pitch_model.layers ] +
+            first_layer_initial_state_pitch = [dict(initial=matrixify(self.img_vec_pitch, num_notes), taps=[-1])]
+            note_outputs_info = (first_layer_initial_state_pitch + [ initial_state_with_taps(layer) for layer in self.pitch_model.layers[1:] ] +
                                  [ dict(initial=start_note_values, taps=[-1]) ])
             
             notes_result, updates = theano.scan(fn=self._predict_step_note, sequences=[time_final], outputs_info=note_outputs_info)
@@ -309,8 +313,8 @@ class Model(object):
         # start_sentinel = startSentinel()
         num_notes = self.predict_seed.shape[0]
         
-        first_layer_initial_state = [dict(initial=matrixify(self.img_vec, num_notes), taps=[-1])]
-        time_outputs_info = (first_layer_initial_state + [ initial_state_with_taps(layer, num_notes) for layer in self.time_model.layers[1:] ] +
+        first_layer_initial_state_time = [dict(initial=matrixify(self.img_vec_time, num_notes), taps=[-1])]
+        time_outputs_info = (first_layer_initial_state_time + [ initial_state_with_taps(layer, num_notes) for layer in self.time_model.layers[1:] ] +
                              [ dict(initial=self.predict_seed, taps=[-1]), dict(initial=0, taps=[-1]), None ])
             
         time_result, updates = theano.scan( fn=step_time, 
@@ -322,13 +326,13 @@ class Model(object):
         self.predicted_output = time_result[-1]
         
         self.predict_fun = theano.function(
-            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec],
+            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec_time],
             outputs=self.predicted_output,
             updates=updates,
             allow_input_downcast=True)
 
         self.predict_thought_fun = theano.function(
-            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec],
+            inputs=[self.steps_to_simulate, self.conservativity, self.predict_seed, self.img_vec_time],
             outputs=ensure_list(self.predict_thoughts),
             updates=updates,
             allow_input_downcast=True)

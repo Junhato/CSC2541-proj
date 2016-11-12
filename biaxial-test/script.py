@@ -16,6 +16,7 @@ if __name__ == "__main__":
     path = "../data/"
     mood_dirs = ["sad", "happy", "anxious"]
     dr_layer_size = 600
+    dr_layer_size2 = 150
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
     dropout = 0.35
@@ -36,9 +37,12 @@ if __name__ == "__main__":
     music_dict = {"sad": sad_pieces, "happy": happy_pieces, "anxious": anxious_pieces}
     
     # 'sample' images
-    sad_img = get_image_features(cnn, path + "sad/images/moulin-rouge-201.jpg", dr_layer_size)[0]
-    happy_img = get_image_features(cnn, path + "happy/images/224.jpg", dr_layer_size)[0]
-    anxious_img = get_image_features(cnn, path + "anxious/images/lotr2-137.jpg", dr_layer_size)[0]
+    sad_img_feature_time = get_image_features(cnn, path + "sad/images/moulin-rouge-201.jpg", dr_layer_size)[0]
+    happy_img_feature_time = get_image_features(cnn, path + "happy/images/224.jpg", dr_layer_size)[0]
+    anxious_img_feature_time = get_image_features(cnn, path + "anxious/images/lotr2-137.jpg", dr_layer_size)[0]
+    sad_img_feature_pitch = get_image_features(cnn, path + "sad/images/moulin-rouge-201.jpg", dr_layer_size2)[0]
+    happy_img_feature_pitch = get_image_features(cnn, path + "happy/images/224.jpg", dr_layer_size2)[0]
+    anxious_img_feature_pitch = get_image_features(cnn, path + "anxious/images/lotr2-137.jpg", dr_layer_size2)[0]
     print("Sample image features retrieved.")
     
     # Add all images and their corresponding mood in a dictionary
@@ -62,21 +66,25 @@ if __name__ == "__main__":
 
     for i in range(epochs):
         for img, music in img_music_dict.iteritems():
-            img_feature = get_image_features(cnn, img, dr_layer_size)
-            error = m.update_fun(music[0], music[1], img_feature[0])
+            img_feature_time = get_image_features(cnn, img, dr_layer_size)
+            img_feature_pitch = get_image_features(cnn, img, dr_layer_size2)
+            error = m.update_fun(music[0], music[1], img_feature_time[0], img_feature_pitch[0])
             if counter % 100 == 0:
                 print "counter {}, error={}".format(counter,error)
                 # sad
                 xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["sad"]))
-                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], sad_img)), axis=0),'output/sample-sad{}'.format(counter))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), \
+                    m.predict_fun(batch_len, 1, xIpt[0], sad_img_feature_time, sad_img_feature_pitch)), axis=0),'output/sample-sad{}'.format(counter))
                 
                 # happy
                 xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["happy"]))
-                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], happy_img)), axis=0),'output/sample-happy{}'.format(counter))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), \
+                    m.predict_fun(batch_len, 1, xIpt[0], happy_img_feature_time, happy_img_feature_pitch)), axis=0),'output/sample-happy{}'.format(counter))
                 
                 #anxious
                 xIpt, xOpt = map(numpy.array, getPieceSegment(music_dict["anxious"]))
-                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), m.predict_fun(batch_len, 1, xIpt[0], anxious_img)), axis=0),'output/sample-anxious{}'.format(counter))
+                noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), \
+                    m.predict_fun(batch_len, 1, xIpt[0], anxious_img_feature_time, anxious_img_feature_pitch)), axis=0),'output/sample-anxious{}'.format(counter))
                 
                 pickle.dump(m.learned_config,open('output/params{}.p'.format(counter), 'wb'))
             
