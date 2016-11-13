@@ -33,12 +33,12 @@ if __name__ == "__main__":
     img_features_small = pickle.load(open("img_features_small.p", "rb"))
     
     # 'sample' images
-    sad_img_feature_time = img_features_large["sad/images/1.jpg"]
-    happy_img_feature_time = img_features_large["happy/images/224.jpg"]
-    anxious_img_feature_time = img_features_large["anxious/images/27.jpg"]
-    sad_img_feature_pitch = img_features_small["sad/images/1.jpg"]
-    happy_img_feature_pitch = img_features_small["happy/images/224.jpg"]
-    anxious_img_feature_pitch = img_features_small["anxious/images/27.jpg"]
+    sad_img_feature_time = img_features_large["../data/sad/images/1.jpg"]
+    happy_img_feature_time = img_features_large["../data/happy/images/224.jpg"]
+    anxious_img_feature_time = img_features_large["../data/anxious/images/27.jpg"]
+    sad_img_feature_pitch = img_features_small["../data/sad/images/1.jpg"]
+    happy_img_feature_pitch = img_features_small["../data/happy/images/224.jpg"]
+    anxious_img_feature_pitch = img_features_small["../data/anxious/images/27.jpg"]
     print("Sample image features retrieved.")
     
     # Add all images and their corresponding mood in a dictionary
