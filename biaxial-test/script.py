@@ -15,34 +15,30 @@ def signal_handler(signame, sf):
 if __name__ == "__main__":
     path = "../data/"
     mood_dirs = ["sad", "happy", "anxious"]
-    dr_layer_size = 600
-    dr_layer_size2 = 200
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
     dropout = 0.35
-    epochs = 5
-
-    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
-    cnn = VGG_16('vgg16_weights_th_dim_ordering_th_kernels.h5')
-    cnn.compile(optimizer=sgd, loss='categorical_crossentropy')
-    print("CNN initialized.")
-    
+    epochs = 5    
     m = model.Model(music_model_size, pitch_model_size, dropout)
     print("Model initialized.")
     
     sad_pieces = loadPieces(path + mood_dirs[0] + '/music/')
     happy_pieces = loadPieces(path + mood_dirs[1] + '/music/')
     anxious_pieces = loadPieces(path + mood_dirs[2] + '/music/')
-    print("Music loaded.")
     music_dict = {"sad": sad_pieces, "happy": happy_pieces, "anxious": anxious_pieces}
+    print("Music loaded.")
+    
+    # load image features
+    img_features_large = pickle.load(open("img_features_large.p", "rb"))
+    img_features_small = pickle.load(open("img_features_small.p", "rb"))
     
     # 'sample' images
-    sad_img_feature_time = get_image_features(cnn, path + "sad/images/moulin-rouge-201.jpg", dr_layer_size)[0]
-    happy_img_feature_time = get_image_features(cnn, path + "happy/images/224.jpg", dr_layer_size)[0]
-    anxious_img_feature_time = get_image_features(cnn, path + "anxious/images/lotr2-137.jpg", dr_layer_size)[0]
-    sad_img_feature_pitch = get_image_features(cnn, path + "sad/images/moulin-rouge-201.jpg", dr_layer_size2)[0]
-    happy_img_feature_pitch = get_image_features(cnn, path + "happy/images/224.jpg", dr_layer_size2)[0]
-    anxious_img_feature_pitch = get_image_features(cnn, path + "anxious/images/lotr2-137.jpg", dr_layer_size2)[0]
+    sad_img_feature_time = img_features_large["sad/images/1.jpg"]
+    happy_img_feature_time = img_features_large["happy/images/224.jpg"]
+    anxious_img_feature_time = img_features_large["anxious/images/27.jpg"]
+    sad_img_feature_pitch = img_features_small["sad/images/1.jpg"]
+    happy_img_feature_pitch = img_features_small["happy/images/224.jpg"]
+    anxious_img_feature_pitch = img_features_small["anxious/images/27.jpg"]
     print("Sample image features retrieved.")
     
     # Add all images and their corresponding mood in a dictionary
@@ -66,9 +62,9 @@ if __name__ == "__main__":
 
     for i in range(epochs):
         for img, music in img_music_dict.iteritems():
-            img_feature_time = get_image_features(cnn, img, dr_layer_size)
-            img_feature_pitch = get_image_features(cnn, img, dr_layer_size2)
-            error = m.update_fun(music[0], music[1], img_feature_time[0], img_feature_pitch[0])
+            img_feature_time = img_features_large[img]
+            img_feature_pitch = img_features_small[img]
+            error = m.update_fun(music[0], music[1], img_feature_time, img_feature_pitch)
             if counter % 100 == 0:
                 print "counter {}, error={}".format(counter,error)
                 # sad
