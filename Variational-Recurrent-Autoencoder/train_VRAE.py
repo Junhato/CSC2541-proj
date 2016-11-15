@@ -41,8 +41,7 @@ for mood in mood_dirs:
             midi = dataset.load_midi_data(music_path)
             if len(midi) >= 120:
                 midi = midi[:120].astype(np.float32)
-                #midi_frames.append(midi)
-midi_frames.append(dataset.load_midi_data("../data/happy/music/BFBB_Spongebob_Neighborhood.mid")[:120].astype(np.float32))
+                midi_frames.append(midi)
 ##### DATA #####
 
 ##### MODEL #####
@@ -135,3 +134,9 @@ for epoch in xrange(1, n_epochs + 1):
                 pickle.dump(copy.deepcopy(model).to_cpu(), f)
         
         counter += 1
+
+dataset.write_to_file(output, counter)
+print "{}/{}, train_loss = {}, total_rec_loss = {}, time = {}".format(counter, n_epochs, total_loss.data, total_rec_loss.data, time.time()-t1)
+model_path = "%s/VRAE_%s_%d.pkl" % (args.output_dir, args.dataset, counter)
+with open(model_path, "w") as f:
+    pickle.dump(copy.deepcopy(model).to_cpu(), f)
