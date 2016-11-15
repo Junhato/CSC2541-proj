@@ -39,8 +39,8 @@ for mood in mood_dirs:
         music_path = args.data_path + mood + "/music/" + music
         if os.path.isfile(music_path):
             midi = dataset.load_midi_data(music_path)
-            if len(midi) >= 120:
-                midi = midi[:120].astype(np.float32)
+            if len(midi) >= 60:
+                midi = midi[:60].astype(np.float32)
                 midi_frames.append(midi)
 ##### DATA #####
 
@@ -97,16 +97,10 @@ if args.gpu >= 0:
 optimizer = optimizers.Adam()
 optimizer.setup(model.collect_parameters())
 
-total_losses = np.zeros(n_epochs, dtype=np.float32)
-
 counter = 0
 for epoch in xrange(1, n_epochs + 1):
-    t1 = time.time()
-    total_rec_loss = 0.0
-    total_kl_loss = 0.0
-    total_loss = 0.0
     for i in range(len(midi_frames)):
-        current_midi = midi_frames[i]
+        t1 = time.time()
         state = make_initial_state(n_hidden_recog[0], state_pattern)
         x_batch = midi_frames[i]
 
@@ -116,19 +110,15 @@ for epoch in xrange(1, n_epochs + 1):
         output, rec_loss, kl_loss, state = model.forward_one_step(x_batch, state, continuous, nonlinear_q='tanh', nonlinear_p='tanh', output_f = 'sigmoid', gpu=-1)
 
         loss = rec_loss + kl_loss
-        total_loss += loss
-        total_rec_loss += rec_loss
-        total_losses[epoch-1] = total_loss.data
-
         optimizer.zero_grads()
         loss.backward()
         loss.unchain_backward()
         optimizer.clip_grads(args.clip_grads)
         optimizer.update()
         
-        if counter % 1 == 0:
+        if counter % 20 == 0:
             dataset.write_to_file(output, counter)
-            print "{}/{}, train_loss = {}, total_rec_loss = {}, time = {}".format(counter, n_epochs, total_loss.data, total_rec_loss.data, time.time()-t1)
+            print "{}, kl_loss = {}, rec_loss = {}, time = {}".format(counter, kl_loss.data, rec_loss.data, time.time()-t1)
             model_path = "%s/VRAE_%s_%d.pkl" % (args.output_dir, args.dataset, counter)
             with open(model_path, "w") as f:
                 pickle.dump(copy.deepcopy(model).to_cpu(), f)
