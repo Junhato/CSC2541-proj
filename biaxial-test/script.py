@@ -3,11 +3,9 @@ import cPickle as pickle
 import signal
 import model
 
-from keras.optimizers import SGD
 from midi_to_statematrix import *
 from data import *
 from multi_training import *
-from vgg16_keras_th import VGG_16, get_image_features
 
 def signal_handler(signame, sf):
     stopflag[0] = True
@@ -18,7 +16,7 @@ if __name__ == "__main__":
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
     dropout = 0.35
-    epochs = 5    
+    epochs = 8    
     m = model.Model(music_model_size, pitch_model_size, dropout)
     print("Model initialized.")
     
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     print("All image-music loaded in dictionary.")
     
     # Load previously saved configurations
-    # learned_list = pickle.load(open('output/params7300.p', 'rb'))
+    # learned_list = pickle.load(open('output/params4200.p', 'rb'))
     # m.learned_config = learned_list
     
     # Train

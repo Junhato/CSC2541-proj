@@ -5,7 +5,7 @@ import cPickle as pickle
 
 import signal
 
-batch_width = 10 # number of sequences in a batch
+batch_width = 3 # number of sequences in a batch
 batch_len = 16*8 # length of each sequence
 division_len = 16 # interval between possible start locations
 
@@ -39,9 +39,9 @@ def getPieceSegment(pieces):
     return seg_in, seg_out
 
 def getPieceBatch(pieces):
-    #i,o = zip(*[getPieceSegment(pieces) for _ in range(batch_width)])
-    i, o = getPieceSegment(pieces)
-    return numpy.array([i]), numpy.array([o])
+    i,o = zip(*[getPieceSegment(pieces) for _ in range(batch_width)])
+    #i, o = getPieceSegment(pieces)
+    return numpy.array(i), numpy.array(o)
 
 def trainPiece(model,pieces,epochs,start=0):
     stopflag = [False]
