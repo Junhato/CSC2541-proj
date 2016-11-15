@@ -33,7 +33,7 @@ if __name__ == "__main__":
     #batch_size = 100
     n_latent = 20
     #n_epochs = 40
-    n_epochs = 10
+    n_epochs = 20
     learning_rate = 0.001
     lam = 0
     path = "./"
@@ -67,14 +67,9 @@ if __name__ == "__main__":
         np.save(path + "LB_list.npy", LB_list)
         my_vrae.save_parameters(path)
             
-    
-    #my_z = np.random.normal(0, 1, (latent_variables,1))
-    t_steps = 71
-    z, mu, sigma = my_vrae.encode(data[:,:,0])
-    sample_roll = my_vrae.decode(t_steps, latent_variables, z) 
-    print "original piano_roll"
-    print(data[:,:,0])
-    print "decoded piano_roll"
-    print(sample_roll)
-    outfile = "sample.mid"
-    utils.midiwrite(outfile, sample_roll)
+
+    test_data = utils.midiread("music/4.mid")
+    z, mu_encoder, log_sigma_encoder = my_vrae.encode(test_data.piano_roll)
+    d = my_vrae.decode(71, latent_variables, z)
+    print(np.count_nonzero(d))
+    utils.midiwrite('sample.mid', d)

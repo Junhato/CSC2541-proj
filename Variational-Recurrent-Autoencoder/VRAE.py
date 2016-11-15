@@ -190,7 +190,7 @@ class VRAE:
 
         for t in xrange(t_steps):
             h = np.tanh(W_hhd.dot(h) + b_hhd + W_xhd.dot(x[t,:,np.newaxis]) + b_xhd)
-            x[t+1,:] = np.squeeze(1 /(1 + np.exp(-(W_hx.dot(h) + b_hx))))
+            x[t+1,:] = np.round(np.squeeze(1 /(1 + np.exp(-(W_hx.dot(h) + b_hx)))))
         
         return x[1:,:]
 
