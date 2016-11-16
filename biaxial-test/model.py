@@ -129,7 +129,7 @@ class Model(object):
         # dimensions: (batch, time, notes, onOrArtic) with 0:on, 1:artic
         self.output_mat = T.btensor4()
         # dimensions: (batch, features)
-        self.img_vec = T.fvector()
+        self.img_vec = T.dvector()
         
         self.epsilon = np.spacing(np.float32(1.0))
 
@@ -266,7 +266,7 @@ class Model(object):
 
         self.predict_seed = T.bmatrix()
         self.steps_to_simulate = T.iscalar()
-        self.img_vec = T.fvector()
+        self.img_vec = T.dvector()
 
         def step_time(*states):
             # States is [ *hiddens, prev_result, time]
