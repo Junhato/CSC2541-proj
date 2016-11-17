@@ -84,7 +84,7 @@ class VRAE(FunctionSet):
                 np_output_t = cuda.to_cpu(output_t.data)
                 output[i] = np_output_t
             else:
-                output[i]  = np.round(output_t.data)
+                output[i]  = output_t.data
 
 
         KLD = -0.0005 * F.sum(1 + q_log_sigma - q_mean**2 - F.exp(q_log_sigma))

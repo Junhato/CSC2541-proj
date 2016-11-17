@@ -32,16 +32,16 @@ if not os.path.exists(args.output_dir):
 ##### DATA #####
 print("PROCESSING DATA")
 mood_dirs = ["sad", "happy", "anxious"]
-midi_frames = []
+midi_list = []
 for mood in mood_dirs:
     music_dir = os.listdir(args.data_path + mood + "/music")
     for music in music_dir:
         music_path = args.data_path + mood + "/music/" + music
         if os.path.isfile(music_path):
             midi = dataset.load_midi_data(music_path)
-            if len(midi) >= 60:
-                midi = midi[:60].astype(np.float32)
-                midi_frames.append(midi)
+            for twenty_chunk in np.array_split(midi, 10):
+                if len(twenty_chunk) == 10:
+                    midi_list.append(twenty_chunk.astype(np.float32))
 ##### DATA #####
 
 ##### MODEL #####
@@ -58,7 +58,7 @@ n_z = 2
 layers = {}
 
 # Recognition model.
-example_midi = midi_frames[0]
+example_midi = midi_list[0]
 rec_layer_sizes = [(example_midi.shape[1], n_hidden_recog[0])]
 rec_layer_sizes += zip(n_hidden_recog[:-1], n_hidden_recog[1:])
 rec_layer_sizes += [(n_hidden_recog[-1], n_z)]
@@ -97,12 +97,17 @@ if args.gpu >= 0:
 optimizer = optimizers.Adam()
 optimizer.setup(model.collect_parameters())
 
+# sample
+outputs = np.zeros((120, example_midi.shape[1]), dtype=np.float32)
 counter = 0
-for epoch in xrange(1, n_epochs + 1):
-    for i in range(len(midi_frames)):
+counter2 = 0
+
+for epoch in range(0, n_epochs):
+    total_loss = 0.0
+    for i in range(len(midi_list)):
         t1 = time.time()
         state = make_initial_state(n_hidden_recog[0], state_pattern)
-        x_batch = midi_frames[i]
+        x_batch = midi_list[i]
 
         if args.gpu >= 0:
             x_batch = cuda.to_gpu(x_batch)
@@ -110,23 +115,24 @@ for epoch in xrange(1, n_epochs + 1):
         output, rec_loss, kl_loss, state = model.forward_one_step(x_batch, state, continuous, nonlinear_q='tanh', nonlinear_p='tanh', output_f = 'sigmoid', gpu=-1)
 
         loss = rec_loss + kl_loss
+        total_loss += loss
+        
         optimizer.zero_grads()
         loss.backward()
         loss.unchain_backward()
         optimizer.clip_grads(args.clip_grads)
         optimizer.update()
         
-        if counter % 20 == 0:
-            dataset.write_to_file(output, counter)
-            print "{}, kl_loss = {}, rec_loss = {}, time = {}".format(counter, kl_loss.data, rec_loss.data, time.time()-t1)
-            model_path = "%s/VRAE_%s_%d.pkl" % (args.output_dir, args.dataset, counter)
+        outputs[counter * 10 : (counter + 1) * 10] = np.round(output)
+        counter += 1
+        
+        if counter == 12:
+            dataset.write_to_file(outputs, counter2)
+            print "{}, total_loss = {}, time = {}".format(counter2, total_loss.data, time.time()-t1)
+            model_path = "%s/VRAE_%s_%d.pkl" % (args.output_dir, args.dataset, counter2)
             with open(model_path, "w") as f:
                 pickle.dump(copy.deepcopy(model).to_cpu(), f)
-        
-        counter += 1
-
-dataset.write_to_file(output, counter)
-print "{}/{}, train_loss = {}, total_rec_loss = {}, time = {}".format(counter, n_epochs, total_loss.data, total_rec_loss.data, time.time()-t1)
-model_path = "%s/VRAE_%s_%d.pkl" % (args.output_dir, args.dataset, counter)
-with open(model_path, "w") as f:
-    pickle.dump(copy.deepcopy(model).to_cpu(), f)
+            # reset
+            counter = 0
+            total_loss = 0
+            counter2 += 1
