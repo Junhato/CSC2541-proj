@@ -21,7 +21,6 @@ class VRAE(FunctionSet):
         return v_d
 
     def forward_one_step(self, x_data, state, continuous=True, nonlinear_q='tanh', nonlinear_p='tanh', output_f = 'sigmoid', gpu=-1):
-
         output = np.zeros( x_data.shape ).astype(np.float32)
 
         nonlinear = {'sigmoid': F.sigmoid, 'tanh': F.tanh, 'softplus': self.softplus, 'relu': F.relu}

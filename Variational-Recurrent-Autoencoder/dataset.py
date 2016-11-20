@@ -247,7 +247,7 @@ def load_midi_data(data_dir):
 
     return midi_data.piano_roll
 
-def write_to_file(saved_outputs, epoch):
-    utils.midiwrite("output/sample-{}.mid".format(epoch), saved_outputs)
+def write_to_file(saved_outputs, epoch, i):
+    utils.midiwrite("output/sample-{}-{}.mid".format(epoch, i), saved_outputs)
     
 
