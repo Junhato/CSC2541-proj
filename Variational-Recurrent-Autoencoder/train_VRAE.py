@@ -49,7 +49,7 @@ print("FINISHED PROCESSING DATA")
 ### Recognition model ###
 n_epochs = 500
 n_hidden = [500]
-n_z = 2
+n_z = 100
 continuous = False
 
 n_hidden_recog = n_hidden
@@ -107,7 +107,7 @@ for epoch in xrange(1, n_epochs + 1):
     total_kl_loss = 0.0
     total_loss = 0.0
     # state = make_initial_state(n_hidden_recog[0], state_pattern)
-    for i in xrange(1):
+    for i in xrange(len(midi_list)):
         state = make_initial_state(n_hidden_recog[0], state_pattern)
         x_batch = midi_list[i]
 
