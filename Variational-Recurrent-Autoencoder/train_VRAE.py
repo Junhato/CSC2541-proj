@@ -47,7 +47,7 @@ for mood in mood_dirs:
 print("FINISHED PROCESSING DATA")
 
 ### Recognition model ###
-n_epochs = 500
+n_epochs = 50
 n_hidden = [500]
 n_z = 100
 continuous = False
@@ -80,10 +80,7 @@ layers['gen_h_h']  = F.Linear(n_hidden_gen[0], n_hidden_gen[0])
 
 layers['output']   = F.Linear(n_hidden_gen[-1], train_x.shape[1])
 
-if args.init_from == "":
-    model = VRAE(**layers)
-else:
-    model = pickle.load(open(args.init_from))
+model = pickle.load(open("output/VRAE_midi_67_900.pkl"))
 
 # state pattern
 state_pattern = ['recog_h', 'gen_h']
@@ -97,9 +94,7 @@ if args.gpu >= 0:
 optimizer = optimizers.Adam()
 optimizer.setup(model.collect_parameters())
 
-total_losses = np.zeros(n_epochs, dtype=np.float32)
-
-for epoch in xrange(1, n_epochs + 1):
+for epoch in xrange(67, n_epochs + 67):
     print('epoch', epoch)
 
     t1 = time.time()
@@ -119,7 +114,6 @@ for epoch in xrange(1, n_epochs + 1):
         loss = rec_loss + kl_loss
         total_loss += loss
         total_rec_loss += rec_loss
-        total_losses[epoch-1] = total_loss.data
 
         optimizer.zero_grads()
         loss.backward()
@@ -130,7 +124,7 @@ for epoch in xrange(1, n_epochs + 1):
    
         print "{}/{}, train_loss = {}, total_rec_loss = {}, time = {}".format(i, len(midi_list), total_loss.data, total_rec_loss.data, time.time()-t1)
 
-        if i % 100 == 0:
+        if i % 500 == 0:
             dataset.write_to_file(np.round(output), epoch, i)
             model_path = "%s/VRAE_%s_%d_%d.pkl" % (args.output_dir, args.dataset, epoch, i)
             with open(model_path, "w") as f:
