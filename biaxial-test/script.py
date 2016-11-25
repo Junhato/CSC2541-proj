@@ -3,11 +3,9 @@ import cPickle as pickle
 import signal
 import model
 
-from keras.optimizers import SGD
 from midi_to_statematrix import *
 from data import *
 from multi_training import *
-from vgg16_keras_th import VGG_16, get_image_features
 
 def signal_handler(signame, sf):
     stopflag[0] = True
@@ -15,17 +13,10 @@ def signal_handler(signame, sf):
 if __name__ == "__main__":
     path = "../data/"
     mood_dirs = ["sad", "happy", "anxious"]
-    dr_layer_size = 600
     music_model_size = [300,300]
     pitch_model_size = [100, 50]
     dropout = 0.5
-    epochs = 10
-
-    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
-    cnn = VGG_16('vgg16_weights_th_dim_ordering_th_kernels.h5')
-    cnn.compile(optimizer=sgd, loss='categorical_crossentropy')
-    print("CNN initialized.")
-    
+    epochs = 5
     m = model.Model(music_model_size, pitch_model_size, dropout)
     print("Model initialized.")
     
@@ -34,32 +25,36 @@ if __name__ == "__main__":
     anxious_pieces = loadPieces(path + mood_dirs[2] + '/music/')
     print("Music loaded.")
     music_dict = {"sad": sad_pieces, "happy": happy_pieces, "anxious": anxious_pieces}
+
+    # load image features
+    img_features_large = pickle.load(open("img_features_large.p", "rb"))
     
     # 'sample' images
-    sad_img = get_image_features(cnn, path + "sad/images/moulin-rouge-201.jpg", dr_layer_size)[0]
-    happy_img = get_image_features(cnn, path + "happy/images/224.jpg", dr_layer_size)[0]
-    anxious_img = get_image_features(cnn, path + "anxious/images/lotr2-137.jpg", dr_layer_size)[0]
+    sad_img = img_features_large["../data/sad/images/1.jpg"]
+    happy_img = img_features_large["../data/happy/images/224.jpg"]
+    anxious_img = img_features_large["../data/anxious/images/27.jpg"]
     print("Sample image features retrieved.")
     
     # Add all images and their corresponding mood in a dictionary
     img_music_dict = {}
-    for mood in mood_dirs:
-        img_dir = os.listdir(path + mood + "/images")
-        for image in img_dir:
-            img_path = path + mood + "/images/" + image
-            if os.path.isfile(img_path):
-                pcs_in, pcs_out = getPieceBatch(music_dict[mood])
-                img_music_dict[img_path] = [pcs_in, pcs_out]
+    for img in img_features_large.keys():
+        mood = img.split("/")[2]
+        pcs_in, pcs_out = getPieceBatch(music_dict[mood])
+        img_music_dict[img] = [pcs_in, pcs_out]
     print("All image-music loaded in dictionary.")
+
+    # Load previously saved configurations
+    learned_list = pickle.load(open('output/params2300.p'))
+    m.learned_config = learned_list
     
     # Train
     old_handler = signal.signal(signal.SIGINT, signal_handler)
-    counter = 0;
+    counter = 2301;
 
     for i in range(epochs):
         for img, music in img_music_dict.iteritems():
-            img_feature = get_image_features(cnn, img, dr_layer_size)
-            error = m.update_fun(music[0], music[1], img_feature[0])
+            img_feature = img_features_large[img]
+            error = m.update_fun(music[0], music[1], img_feature)
             if counter % 100 == 0:
                 print "counter {}, error={}".format(counter,error)
                 # sad
