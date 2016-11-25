@@ -84,6 +84,7 @@ for epoch in range(0, n_epochs):
 
         if i % 10 == 0:
             dataset.write_to_file(np.round(output), epoch, i)
-    model_path = "%s/VRAE_%s_%d_%d.pkl" % (args.output_dir, args.dataset, epoch, i)
-    #with open(model_path, "w") as f:
-        #pickle.dump(copy.deepcopy(model).to_cpu(), f)
+    
+    model_path = "%s/VRAE_%s_%d.pkl" % (args.output_dir, args.dataset, epoch)
+    with open(model_path, "w") as f:
+        pickle.dump(copy.deepcopy(model).to_cpu(), f)
