@@ -32,8 +32,8 @@ if not os.path.exists(args.output_dir):
 print("PROCESSING DATA")
 mood_dirs = ['sad', 'happy', 'anxious']
 midi_list = []
-chunk_length = 20
-overlap = 5
+chunk_length = 120
+overlap = 60
 for mood in mood_dirs:
     music_dir = os.listdir(args.data_path + mood + "/music")
     for music in music_dir:
@@ -44,10 +44,11 @@ for mood in mood_dirs:
             while start + chunk_length <= len(midi):
                 midi_list.append(midi[start: start+chunk_length].astype(np.float32))
                 start += overlap
+np.random.shuffle(midi_list)
 print("FINISHED PROCESSING DATA")
 
 ### Recognition model ###
-n_epochs = 50
+n_epochs = 5
 n_hidden = [500]
 n_z = 100
 continuous = False
@@ -80,7 +81,10 @@ layers['gen_h_h']  = F.Linear(n_hidden_gen[0], n_hidden_gen[0])
 
 layers['output']   = F.Linear(n_hidden_gen[-1], train_x.shape[1])
 
-model = pickle.load(open("output/VRAE_midi_67_900.pkl"))
+if args.init_from == "":
+    model = VRAE(**layers)
+else:
+    model = pickle.load(open(args.init_from))
 
 # state pattern
 state_pattern = ['recog_h', 'gen_h']
@@ -94,7 +98,7 @@ if args.gpu >= 0:
 optimizer = optimizers.Adam()
 optimizer.setup(model.collect_parameters())
 
-for epoch in xrange(67, n_epochs + 67):
+for epoch in xrange(1, n_epochs):
     print('epoch', epoch)
 
     t1 = time.time()
@@ -120,12 +124,17 @@ for epoch in xrange(67, n_epochs + 67):
         loss.unchain_backward()
         optimizer.clip_grads(args.clip_grads)
         optimizer.update()
-
    
         print "{}/{}, train_loss = {}, total_rec_loss = {}, time = {}".format(i, len(midi_list), total_loss.data, total_rec_loss.data, time.time()-t1)
 
         if i % 500 == 0:
-            dataset.write_to_file(np.round(output), epoch, i)
-            model_path = "%s/VRAE_%s_%d_%d.pkl" % (args.output_dir, args.dataset, epoch, i)
-            with open(model_path, "w") as f:
-                pickle.dump(copy.deepcopy(model).to_cpu(), f)
+            # Format output so we can write it as midifile 
+            midi_out = []
+            for timestep in output:
+                midi_out.append([ np.random.choice([0,1], p=[1-k, k]) for k in timestep ])
+            dataset.write_to_file(np.asarray(midi_out), epoch, i)
+    
+    # Save model every epoch
+    model_path = "%s/VRAE_%s_%d.pkl" % (args.output_dir, args.dataset, epoch)
+    with open(model_path, "w") as f:
+        pickle.dump(copy.deepcopy(model).to_cpu(), f)

@@ -87,7 +87,6 @@ class VRAE(FunctionSet):
 
 
         KLD = -0.0005 * F.sum(1 + q_log_sigma - q_mean**2 - F.exp(q_log_sigma))
-
         return output, rec_loss, KLD, state
 
 
